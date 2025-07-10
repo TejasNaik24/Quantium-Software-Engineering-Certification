@@ -1,41 +1,35 @@
-import csv
+import pandas as pd
 import os
 
-DATA_DIRECTORY = "./data"
-OUTPUT_FILE_PATH = "./formatted_data.csv"
+# Step 1: Load and combine all CSV files
+data_dir = "data"
+all_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith(".csv")]
+df_list = [pd.read_csv(file) for file in all_files]
+data = pd.concat(df_list, ignore_index=True)
 
-# open the output file
-with open(OUTPUT_FILE_PATH, "w") as output_file:
-    writer = csv.writer(output_file)
+# Step 2: Clean price column
+data['price'] = data['price'].replace('[\$,]', '', regex=True).astype(float)
 
-    # add a csv header
-    header = ["sales", "date", "region"]
-    writer.writerow(header)
+# Step 3: Filter only 'pink morsel' product
+pink_data = data[data['product'] == 'pink morsel'].copy()
 
-    # iterate through all files in the data directory
-    for file_name in os.listdir(DATA_DIRECTORY):
-        # open the csv file for reading
-        with open(f"{DATA_DIRECTORY}/{file_name}", "r") as input_file:
-            reader = csv.reader(input_file)
-            # iterate through each row in the csv file
-            row_index = 0
-            for input_row in reader:
-                # if this row is not the csv header, process it
-                if row_index > 0:
-                    # collect data from row
-                    product = input_row[0]
-                    raw_price = input_row[1]
-                    quantity = input_row[2]
-                    transaction_date = input_row[3]
-                    region = input_row[4]
+# Step 4: Convert 'date' to datetime
+pink_data['date'] = pd.to_datetime(pink_data['date'])
 
-                    # if this is a pink morsel transaction, process it
-                    if product == "pink morsel":
-                        # finish formatting data
-                        price = float(raw_price[1:])
-                        sale = price * int(quantity)
+# Step 5: Split data before and after Jan 15, 2021
+cutoff_date = pd.to_datetime("2021-01-15")
+before = pink_data[pink_data['date'] < cutoff_date]
+after = pink_data[pink_data['date'] >= cutoff_date]
 
-                        # write the row to output file
-                        output_row = [sale, transaction_date, region]
-                        writer.writerow(output_row)
-                row_index += 1
+# Step 6: Calculate total sales (price * quantity)
+before_sales = (before['price'] * before['quantity']).sum()
+after_sales = (after['price'] * after['quantity']).sum()
+
+# Output results
+print("Total sales BEFORE Jan 15, 2021: ${:,.2f}".format(before_sales))
+print("Total sales AFTER Jan 15, 2021: ${:,.2f}".format(after_sales))
+
+# Optional: Write summary to a file
+with open("pink_morsel_sales_summary.txt", "w") as f:
+    f.write("Total sales BEFORE Jan 15, 2021: ${:,.2f}\n".format(before_sales))
+    f.write("Total sales AFTER Jan 15, 2021: ${:,.2f}\n".format(after_sales))
