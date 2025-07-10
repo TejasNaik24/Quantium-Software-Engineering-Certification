@@ -1,0 +1,33 @@
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f4f8;
+  margin: 20px;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+}
+
+#region-filter {
+  font-weight: 600;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+label {
+  cursor: pointer;
+  font-size: 16px;
+  color: #444;
+}
+
+label:hover {
+  color: #1abc9c;
+}
+
+.dcc-graph {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
